@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var y5z6a7 = s9t0u1[v2w3x4];
                 var b8c9d0 = y5z6a7.hash;
                 var e1f2g3 = y5z6a7.href.split('#')[0];
-                var h4i5j6 = new URL(e1f2g3).searchParams;
+                var h4i5j6 = new URL(e1f2g3, document.location.href).searchParams;
 
                 var k7l8m9 = p6q7r8;
 
