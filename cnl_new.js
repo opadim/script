@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
             urlParams.has('wbraid') && urlParams.get('wbraid') ||
             urlParams.has('msclkid') && urlParams.get('msclkid') ||
             urlParams.has('fbclid') && urlParams.get('fbclid')) {
-            cnlidValue = urlParams.get('gclid') || urlParams.get('gclid') || urlParams.get('msclkid') || urlParams.get('fbclid');
+            cnlidValue = urlParams.get('gclid') || urlParams.get('wbraid') || urlParams.get('msclkid') || urlParams.get('fbclid');
         } else if (urlParams.has('gclid') || urlParams.has('wbraid') || urlParams.has('msclkid') || urlParams.has('fbclid')) {
             cnlidValue = "EmptyClickID";
         }
