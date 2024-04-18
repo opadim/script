@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var a1b2c3 = new URLSearchParams(window.location.search);
 
         function d4e5f6(g7h8i9) {
-            return g7h8i9.replace(/ /g, '_s_').replace(/-/g, '_d_');
+            return g7h8i9.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
         }
+
 
         if (a1b2c3.has('tid')) {
             var j0k1l2 = a1b2c3.get('tid');
