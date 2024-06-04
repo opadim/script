@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
             a1b2c3.set('tid', m3n4o5);
         }
 
-        var p6q7r8 = a1b2c3.get('gclid') || a1b2c3.get('wbraid') || a1b2c3.get('msclkid') || a1b2c3.get('fbclid');
+        var p6q7r8 = a1b2c3.get('gclid') || a1b2c3.get('gbraid') || a1b2c3.get('wbraid') || a1b2c3.get('msclkid') || a1b2c3.get('fbclid');
 
         if (a1b2c3.toString()) {
             var s9t0u1 = document.getElementsByTagName('a');
