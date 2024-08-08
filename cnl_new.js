@@ -7,21 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return g7h8i9.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
         }
 
-        function replaceCnlid(url) {
-            var urlObj = new URL(url, document.location.href);
-            var params = new URLSearchParams(urlObj.search);
-            
-            if (params.has('tid')) {
-                var tidValue = params.get('tid');
-                if (tidValue.includes('[cnlid]') || tidValue.includes('%5Bcnlid%5D')) {
-                    params.set('tid', tidValue.replace(/(\[cnlid\]|%5Bcnlid%5D)/g, function(match) {
-                        return d4e5f6(decodeURIComponent(match));
-                    }));
-                }
+        if (a1b2c3.has('tid')) {
+            var j0k1l2 = a1b2c3.get('tid');
+            if (j0k1l2.includes('[cnlid]') || j0k1l2.includes('%5Bcnlid%5D')) {
+                var m3n4o5 = d4e5f6(j0k1l2);
+                a1b2c3.set('tid', m3n4o5);
             }
-
-            urlObj.search = params.toString();
-            return urlObj.toString();
         }
 
         var p6q7r8 = a1b2c3.get('gclid') || a1b2c3.get('gbraid') || a1b2c3.get('wbraid') || a1b2c3.get('msclkid') || a1b2c3.get('fbclid');
@@ -32,11 +23,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 var y5z6a7 = s9t0u1[v2w3x4];
                 var b8c9d0 = y5z6a7.hash;
                 var e1f2g3 = y5z6a7.href.split('#')[0];
+                var h4i5j6 = new URL(e1f2g3, document.location.href).searchParams;
 
-                e1f2g3 = replaceCnlid(e1f2g3);
+                var k7l8m9 = p6q7r8;
 
-                if (p6q7r8) {
-                    e1f2g3 = e1f2g3.replace(/(\[cnlid\]|%5Bcnlid%5D)/g, encodeURIComponent(p6q7r8));
+                if (h4i5j6.has('tid') && p6q7r8) {
+                    k7l8m9 = d4e5f6(p6q7r8);
+                }
+
+                if (k7l8m9) {
+                    e1f2g3 = e1f2g3.replace('[cnlid]', k7l8m9).replace('%5Bcnlid%5D', k7l8m9);
                 }
 
                 var n0o1p2 = a1b2c3.toString();
