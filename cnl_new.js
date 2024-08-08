@@ -7,6 +7,22 @@ document.addEventListener('DOMContentLoaded', function () {
             return g7h8i9.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
         }
 
+        function getDevice() {
+            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            if (/windows phone/i.test(userAgent)) {
+                return "windows_phone";
+            }
+            if (/android/i.test(userAgent)) {
+                return "android";
+            }
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                return "iphone";
+            }
+            return "unknown";
+        }
+
+        var deviceType = getDevice();
+
         if (a1b2c3.has('tid')) {
             var j0k1l2 = a1b2c3.get('tid');
             if (j0k1l2.includes('[cnlid]') || j0k1l2.includes('%5Bcnlid%5D')) {
@@ -35,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 e1f2g3 = e1f2g3.replace('[cnlid]', p6q7r8).replace('%5Bcnlid%5D', p6q7r8);
+                e1f2g3 = e1f2g3.replace('[cnl_device]', deviceType).replace('%5Bcnl_device%5D', deviceType);
 
                 var n0o1p2 = a1b2c3.toString();
                 if (e1f2g3.indexOf('?') === -1) {
