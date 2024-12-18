@@ -22,20 +22,18 @@
     // Comprehensive list of known crawler patterns
     const crawlerPatterns = [
         // Search engines
-        /googlebot/i, /bingbot/i, /yandexbot/i, /duckduckbot/i, /baiduspider/i,
+        /googlebot\//i, /bingbot/i, /yandexbot/i, /duckduckbot/i, /baiduspider/i,
         // Social media
-        /facebookexternalhit/i, /twitterbot/i, /linkedinbot/i, /pinterest/i,
-        // SEO tools
-        /ahrefs/i, /semrushbot/i, /moz/i, /screaming frog/i,
-        // Other common bots
-        /bot/i, /crawler/i, /spider/i, /lighthouse/i, /headless/i,
-        // Security scanners
-        /nessus/i, /qualys/i, /acunetix/i
+        /facebookexternalhit\//i, /twitterbot/i, /linkedinbot/i, /pinterest/i
     ];
 
     class UnifiedTracker {
         constructor(userConfig = {}) {
-            Object.assign(config, userConfig);
+            // Create a new config object instead of modifying the original
+            this.config = {
+                ...config,  // Spread the default config
+                ...userConfig  // Spread the user config to override defaults
+            };
 
             // Initialize tracking properties
             this.trackingParams = {};
@@ -48,13 +46,13 @@
             if (!this.isCrawlerVisitor) {
                 this.processUrlParameters();
 
-                if (config.maxVisits && config.redirectUrl) {
+                if (this.config.maxVisits && this.config.redirectUrl) {
                     this.handleVisitCount();
                 }
             }
 
             // Initialize analytics only if endpoint is provided and not a crawler
-            if (config.endpoint && !this.isCrawlerVisitor) {
+            if (this.config.endpoint && !this.isCrawlerVisitor) {
                 this.initializeAnalytics();
             }
         }
