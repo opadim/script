@@ -1,6 +1,5 @@
 // cannoli = awesomex20240903
 (function() {
-    // Configuration
     const config = {
         trackingParams: ['gclid', 'gbraid', 'wbraid', 'msclkid', 'fbclid'],
         storageKey: 'tracking_params',
@@ -8,7 +7,6 @@
         storageDuration: 30 * 24 * 60 * 60 * 1000  // 30 days
     };
 
-    // Crawler detection patterns
     const crawlerPatterns = [
         /googlebot\//i, /bingbot/i, /yandexbot/i, /duckduckbot/i, /baiduspider/i,
         /facebookexternalhit\//i, /twitterbot/i, /linkedinbot/i, /pinterest/i
@@ -37,10 +35,8 @@
                 this.trackingId = this.getTrackingIdFromParams(storedData.params);
             }
 
-            // Then check URL parameters
             this.processUrlParameters();
             
-            // Finally, check referrer if needed
             if (this.trackingId === 'desconhecido') {
                 this.checkReferrerParams();
             }
@@ -61,7 +57,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             let foundNewParams = false;
             
-            // Process and store all parameters
             urlParams.forEach((value, key) => {
                 this.storedParams[key] = value;
                 if (config.trackingParams.includes(key)) {
@@ -96,7 +91,7 @@
                     this.storeParameters(this.storedParams);
                 }
             } catch (e) {
-                console.warn('Error processing referrer URL:', e);
+                console.warn('Erro ao processar URL de origem:', e);
             }
         }
 
@@ -111,7 +106,7 @@
                 localStorage.setItem(config.storageExpiryKey, 
                     (new Date().getTime() + config.storageDuration).toString());
             } catch (e) {
-                console.warn('Error storing parameters:', e);
+                console.warn('Erro ao salvar parametros:', e);
             }
         }
 
@@ -130,7 +125,7 @@
 
                 return JSON.parse(stored);
             } catch (e) {
-                console.warn('Error retrieving stored parameters:', e);
+                console.warn('Erro ao recuperar parametros:', e);
                 return null;
             }
         }
@@ -148,7 +143,6 @@
                     const url = new URL(href, document.location.href);
                     const linkParams = url.searchParams;
 
-                    // Handle existing parameters
                     linkParams.forEach((value, key) => {
                         if (value.includes('[cnlid]') || value.includes('%5Bcnlid%5D')) {
                             const newValue = value
@@ -161,7 +155,6 @@
                         }
                     });
 
-                    // Add stored parameters
                     Object.entries(this.storedParams).forEach(([key, value]) => {
                         if (!linkParams.has(key)) {
                             linkParams.set(key, key.toLowerCase() === 'tid' ? 
@@ -171,15 +164,16 @@
 
                     link.href = url.toString() + hash;
                 } catch (e) {
-                    console.warn('Error processing link:', link.href, e);
+                    console.warn('Erro ao processar link:', link.href, e);
                 }
             }
         }
     }
 
-    // Initialize tracking on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Inicializando Cannoli...');
         const tracker = new TrackingManager();
         tracker.processPageLinks();
+        console.log(`✅ Cannoli inicializado com sucesso`);
     });
 })();
