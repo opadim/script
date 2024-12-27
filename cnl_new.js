@@ -1,66 +1,185 @@
-// cannoli = awesomex10
-document.addEventListener('DOMContentLoaded', function () {
-    (function () {
-        var a1b2c3 = new URLSearchParams(window.location.search);
+// cannoli = awesomex20240903
+(function() {
+    // Configuration
+    const config = {
+        trackingParams: ['gclid', 'gbraid', 'wbraid', 'msclkid', 'fbclid'],
+        storageKey: 'tracking_params',
+        storageExpiryKey: 'tracking_params_expiry',
+        storageDuration: 30 * 24 * 60 * 60 * 1000  // 30 days
+    };
 
-        function d4e5f6(g7h8i9) {
-            return g7h8i9.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
+    // Crawler detection patterns
+    const crawlerPatterns = [
+        /googlebot\//i, /bingbot/i, /yandexbot/i, /duckduckbot/i, /baiduspider/i,
+        /facebookexternalhit\//i, /twitterbot/i, /linkedinbot/i, /pinterest/i
+    ];
+
+    class TrackingManager {
+        constructor() {
+            this.isCrawlerVisitor = this.isCrawler();
+            this.trackingId = 'desconhecido';
+            this.storedParams = {};
+            this.initialize();
         }
 
-        function getDevice() {
-            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            if (/windows phone/i.test(userAgent)) {
-                return "windows_phone";
-            }
-            if (/android/i.test(userAgent)) {
-                return "android";
-            }
-            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                return "iphone";
-            }
-            return "unknown";
+        isCrawler() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            return crawlerPatterns.some(pattern => pattern.test(userAgent));
         }
 
-        var deviceType = getDevice();
+        initialize() {
+            if (this.isCrawlerVisitor) return;
 
-        if (a1b2c3.has('tid')) {
-            var j0k1l2 = a1b2c3.get('tid');
-            if (j0k1l2.includes('[cnlid]') || j0k1l2.includes('%5Bcnlid%5D')) {
-                var m3n4o5 = d4e5f6(j0k1l2);
-                a1b2c3.set('tid', m3n4o5);
+            // Try to get stored parameters first
+            const storedData = this.getStoredParameters();
+            if (storedData) {
+                this.storedParams = storedData.params;
+                this.trackingId = this.getTrackingIdFromParams(storedData.params);
+            }
+
+            // Then check URL parameters
+            this.processUrlParameters();
+            
+            // Finally, check referrer if needed
+            if (this.trackingId === 'desconhecido') {
+                this.checkReferrerParams();
             }
         }
 
-        var p6q7r8 = a1b2c3.get('gclid') || a1b2c3.get('gbraid') || a1b2c3.get('wbraid') || a1b2c3.get('msclkid') || a1b2c3.get('fbclid');
+        getTrackingIdFromParams(params) {
+            for (const param of config.trackingParams) {
+                if (params[param]) return params[param];
+            }
+            return 'desconhecido';
+        }
 
-        if (p6q7r8) {
-            var s9t0u1 = document.getElementsByTagName('a');
-            for (var v2w3x4 = 0; v2w3x4 < s9t0u1.length; v2w3x4++) {
-                var y5z6a7 = s9t0u1[v2w3x4];
-                var b8c9d0 = y5z6a7.hash;
-                var e1f2g3 = y5z6a7.href.split('#')[0];
-                var h4i5j6 = new URL(e1f2g3, document.location.href).searchParams;
+        encodeSpecialChars(str) {
+            return str.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
+        }
 
-                if (h4i5j6.has('tid')) {
-                    var tidValue = h4i5j6.get('tid');
-                    if (tidValue.includes('[cnlid]') || tidValue.includes('%5Bcnlid%5D')) {
-                        var k7l8m9 = d4e5f6(p6q7r8);
-                        h4i5j6.set('tid', k7l8m9);
-                        e1f2g3 = e1f2g3.split('?')[0] + '?' + h4i5j6.toString();
+        processUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let foundNewParams = false;
+            
+            // Process and store all parameters
+            urlParams.forEach((value, key) => {
+                this.storedParams[key] = value;
+                if (config.trackingParams.includes(key)) {
+                    this.trackingId = value;
+                    foundNewParams = true;
+                }
+            });
+
+            if (foundNewParams) {
+                this.storeParameters(this.storedParams);
+            }
+        }
+
+        checkReferrerParams() {
+            if (!document.referrer) return;
+            
+            try {
+                const referrerUrl = new URL(document.referrer);
+                const referrerParams = new URLSearchParams(referrerUrl.search);
+                let foundNewParams = false;
+
+                for (const param of config.trackingParams) {
+                    const value = referrerParams.get(param);
+                    if (value) {
+                        this.storedParams[param] = value;
+                        this.trackingId = value;
+                        foundNewParams = true;
                     }
                 }
 
-                e1f2g3 = e1f2g3.replace('[cnlid]', p6q7r8).replace('%5Bcnlid%5D', p6q7r8);
-                e1f2g3 = e1f2g3.replace('[cnl_device]', deviceType).replace('%5Bcnl_device%5D', deviceType);
-
-                var n0o1p2 = a1b2c3.toString();
-                if (e1f2g3.indexOf('?') === -1) {
-                    e1f2g3 += '?' + n0o1p2;
-                } else {
-                    e1f2g3 += '&' + n0o1p2;
+                if (foundNewParams) {
+                    this.storeParameters(this.storedParams);
                 }
-                y5z6a7.href = e1f2g3 + b8c9d0;
+            } catch (e) {
+                console.warn('Error processing referrer URL:', e);
             }
         }
-    })();
-});
+
+        storeParameters(params) {
+            const data = {
+                params: params,
+                timestamp: new Date().getTime()
+            };
+            
+            try {
+                localStorage.setItem(config.storageKey, JSON.stringify(data));
+                localStorage.setItem(config.storageExpiryKey, 
+                    (new Date().getTime() + config.storageDuration).toString());
+            } catch (e) {
+                console.warn('Error storing parameters:', e);
+            }
+        }
+
+        getStoredParameters() {
+            try {
+                const stored = localStorage.getItem(config.storageKey);
+                const expiry = localStorage.getItem(config.storageExpiryKey);
+
+                if (!stored || !expiry) return null;
+
+                if (new Date().getTime() > parseInt(expiry)) {
+                    localStorage.removeItem(config.storageKey);
+                    localStorage.removeItem(config.storageExpiryKey);
+                    return null;
+                }
+
+                return JSON.parse(stored);
+            } catch (e) {
+                console.warn('Error retrieving stored parameters:', e);
+                return null;
+            }
+        }
+
+        processPageLinks() {
+            if (this.isCrawlerVisitor) return;
+
+            const links = document.getElementsByTagName('a');
+            for (let i = 0; i < links.length; i++) {
+                const link = links[i];
+                const hash = link.hash;
+                const href = link.href.split('#')[0];
+
+                try {
+                    const url = new URL(href, document.location.href);
+                    const linkParams = url.searchParams;
+
+                    // Handle existing parameters
+                    linkParams.forEach((value, key) => {
+                        if (value.includes('[cnlid]') || value.includes('%5Bcnlid%5D')) {
+                            const newValue = value
+                                .replace(/\[cnlid\]/g, this.trackingId)
+                                .replace(/%5Bcnlid%5D/g, this.trackingId);
+                            linkParams.set(key, key.toLowerCase() === 'tid' ? 
+                                this.encodeSpecialChars(newValue) : newValue);
+                        } else if (key.toLowerCase() === 'tid') {
+                            linkParams.set(key, this.encodeSpecialChars(value));
+                        }
+                    });
+
+                    // Add stored parameters
+                    Object.entries(this.storedParams).forEach(([key, value]) => {
+                        if (!linkParams.has(key)) {
+                            linkParams.set(key, key.toLowerCase() === 'tid' ? 
+                                this.encodeSpecialChars(value) : value);
+                        }
+                    });
+
+                    link.href = url.toString() + hash;
+                } catch (e) {
+                    console.warn('Error processing link:', link.href, e);
+                }
+            }
+        }
+    }
+
+    // Initialize tracking on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const tracker = new TrackingManager();
+        tracker.processPageLinks();
+    });
+})();
