@@ -1,10 +1,10 @@
-// cannoli = awesomex20240903
+// cannoli = awesomex20241227
 (function() {
     const config = {
         trackingParams: ['gclid', 'gbraid', 'wbraid', 'msclkid', 'fbclid'],
         storageKey: 'tracking_params',
         storageExpiryKey: 'tracking_params_expiry',
-        storageDuration: 30 * 24 * 60 * 60 * 1000  // 30 days
+        storageDuration: 30 * 24 * 60 * 60 * 1000
     };
 
     const crawlerPatterns = [
@@ -28,7 +28,6 @@
         initialize() {
             if (this.isCrawlerVisitor) return;
 
-            // Try to get stored parameters first
             const storedData = this.getStoredParameters();
             if (storedData) {
                 this.storedParams = storedData.params;
