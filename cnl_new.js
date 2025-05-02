@@ -1,5 +1,5 @@
-// cannoli = awesomex20241227
-(function() {
+// cannoli = awesomex20250502
+(function () {
     const config = {
         trackingParams: ['gclid', 'gbraid', 'wbraid', 'msclkid', 'fbclid'],
         storageKey: 'tracking_params',
@@ -35,10 +35,6 @@
             }
 
             this.processUrlParameters();
-            
-            if (this.trackingId === 'desconhecido') {
-                this.checkReferrerParams();
-            }
         }
 
         getTrackingIdFromParams(params) {
@@ -55,7 +51,7 @@
         processUrlParameters() {
             const urlParams = new URLSearchParams(window.location.search);
             let foundNewParams = false;
-            
+
             urlParams.forEach((value, key) => {
                 this.storedParams[key] = value;
                 if (config.trackingParams.includes(key)) {
@@ -69,40 +65,15 @@
             }
         }
 
-        checkReferrerParams() {
-            if (!document.referrer) return;
-            
-            try {
-                const referrerUrl = new URL(document.referrer);
-                const referrerParams = new URLSearchParams(referrerUrl.search);
-                let foundNewParams = false;
-
-                for (const param of config.trackingParams) {
-                    const value = referrerParams.get(param);
-                    if (value) {
-                        this.storedParams[param] = value;
-                        this.trackingId = value;
-                        foundNewParams = true;
-                    }
-                }
-
-                if (foundNewParams) {
-                    this.storeParameters(this.storedParams);
-                }
-            } catch (e) {
-                console.warn('Erro ao processar URL de origem:', e);
-            }
-        }
-
         storeParameters(params) {
             const data = {
                 params: params,
                 timestamp: new Date().getTime()
             };
-            
+
             try {
                 localStorage.setItem(config.storageKey, JSON.stringify(data));
-                localStorage.setItem(config.storageExpiryKey, 
+                localStorage.setItem(config.storageExpiryKey,
                     (new Date().getTime() + config.storageDuration).toString());
             } catch (e) {
                 console.warn('Erro ao salvar parametros:', e);
@@ -147,7 +118,7 @@
                             const newValue = value
                                 .replace(/\[cnlid\]/g, this.trackingId)
                                 .replace(/%5Bcnlid%5D/g, this.trackingId);
-                            linkParams.set(key, key.toLowerCase() === 'tid' ? 
+                            linkParams.set(key, key.toLowerCase() === 'tid' ?
                                 this.encodeSpecialChars(newValue) : newValue);
                         } else if (key.toLowerCase() === 'tid') {
                             linkParams.set(key, this.encodeSpecialChars(value));
@@ -156,7 +127,7 @@
 
                     Object.entries(this.storedParams).forEach(([key, value]) => {
                         if (!linkParams.has(key)) {
-                            linkParams.set(key, key.toLowerCase() === 'tid' ? 
+                            linkParams.set(key, key.toLowerCase() === 'tid' ?
                                 this.encodeSpecialChars(value) : value);
                         }
                     });
@@ -167,12 +138,80 @@
                 }
             }
         }
+
+        processButtonLinks() {
+            if (this.isCrawlerVisitor) return;
+
+            const buttons = document.querySelectorAll('button[onclick*="window.location.href"]');
+            buttons.forEach(button => {
+                const onclick = button.getAttribute('onclick');
+                const match = onclick.match(/window\.location\.href\s*=\s*['"]([^'"]+)['"]/);
+                if (!match) return;
+
+                let urlStr = match[1];
+                let hash = '';
+                if (urlStr.includes('#')) {
+                    [urlStr, hash] = urlStr.split('#', 2);
+                    hash = '#' + hash;
+                }
+
+                try {
+                    const url = new URL(urlStr, document.location.href);
+                    const linkParams = url.searchParams;
+
+                    // Replace placeholders like {gclid} with actual values
+                    config.trackingParams.forEach(param => {
+                        if (urlStr.includes(`{${param}}`)) {
+                            urlStr = urlStr.replaceAll(`{${param}}`, this.storedParams[param] || '');
+                        }
+                    });
+
+                    // Replace [cnlid] or %5Bcnlid%5D
+                    linkParams.forEach((value, key) => {
+                        if (value.includes('[cnlid]') || value.includes('%5Bcnlid%5D')) {
+                            const newValue = value
+                                .replace(/\[cnlid\]/g, this.trackingId)
+                                .replace(/%5Bcnlid%5D/g, this.trackingId);
+                            linkParams.set(key, key.toLowerCase() === 'tid' ?
+                                this.encodeSpecialChars(newValue) : newValue);
+                        } else if (key.toLowerCase() === 'tid') {
+                            linkParams.set(key, this.encodeSpecialChars(value));
+                        }
+                    });
+
+                    // Add missing stored params
+                    Object.entries(this.storedParams).forEach(([key, value]) => {
+                        if (!linkParams.has(key)) {
+                            linkParams.set(key, key.toLowerCase() === 'tid' ?
+                                this.encodeSpecialChars(value) : value);
+                        }
+                    });
+
+                    // Rebuild the URL
+                    const newUrl = url.origin + url.pathname + '?' + linkParams.toString() + hash;
+                    // Update the onclick attribute
+                    button.setAttribute('onclick', `window.location.href='${newUrl}'`);
+                } catch (e) {
+                    console.warn('Erro ao processar botão:', urlStr, e);
+                }
+            });
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Inicializando Cannoli...');
+    // Track start time
+    const startTime = new Date().getTime();
+    console.log('🚀 Inicializando Cannoli...');
+
+    // Replacing DOMContentLoaded with window.onload
+    window.onload = function () {
         const tracker = new TrackingManager();
         tracker.processPageLinks();
+        tracker.processButtonLinks(); // <-- Added to process button links
         console.log(`✅ Cannoli inicializado com sucesso`);
-    });
-})();
+
+        // Track end time and calculate execution duration
+        const endTime = new Date().getTime();
+        const executionDuration = endTime - startTime;
+        console.log(`⏱️ Tempo: ${executionDuration}ms`);
+    };
+})(); 
